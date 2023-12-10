@@ -1,10 +1,10 @@
-import * as z from 'zod';
+import * as z from "zod";
 
 export const ThreadValidation = z.object({
-  thread: z.string().nonempty().min(3, { message: 'Min 3 chars...'}),
-  accountId: z.string()
+  thread: z.string().nonempty().min(3, { message: "Min 3 chars..." }),
+  accountId: z.string(),
 });
 
 export const CommunityValidation = z.object({
-    thread: z.string().nonempty().min(3, { message: 'Min 3 chars...'})
-  });
+  thread: z.string().nonempty().min(3, { message: "Min 3 chars..." }),
+});
