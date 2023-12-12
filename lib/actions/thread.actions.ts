@@ -5,11 +5,18 @@ import Thread from "../models/thread.model";
 import User from "../models/user.model";
 import { connectToDB } from "../mongoose";
 
-interface Params {
+interface createThreadParams {
   text: string;
   author: string;
   communityId: string | null;
   path: string;
+}
+
+interface addCommentToThreadParams {
+  threadId: string,
+  commentText: string,
+  userId: string,
+  path: string
 }
 
 export async function createThread({
@@ -17,7 +24,7 @@ export async function createThread({
   author,
   communityId,
   path,
-}: Params) {
+}: createThreadParams) {
   try {
     await connectToDB();
 
@@ -67,4 +74,70 @@ export async function fetchThreads(pageNumber = 1, pageSize = 20) {
     const isNext = totalPostsCount > skipAmount + threads.length;
 
     return { threads, isNext }
+}
+
+export async function fetchThreadById(id: string) {
+  await connectToDB();
+
+  try {
+    const thread = await Thread.findById(id)
+      .populate({
+        path: 'author',
+        model: User,
+        select: "_id id name image"
+      })
+      .populate({
+        path: 'children',
+        populate: [
+          {
+            path: 'author',
+            model: User,
+            select: "_id id name parentId image"
+          },
+          {
+            path: 'children',
+            model: Thread,
+            populate: {
+              path: 'author',
+              model: User,
+              select: "_id id name parentId image"
+            }
+          }
+        ]
+      }).exec();
+
+      return thread;
+  } catch (err: any) {
+    throw new Error(`Error fetching thread: ${err.message}`);
+  }
+}
+
+export async function addCommentToThread({
+  threadId,
+  commentText,
+  userId,
+  path
+}: addCommentToThreadParams) {
+  await connectToDB();
+
+  try {
+    const referredThread = await Thread.findById(threadId);
+    if (!referredThread) {
+      throw new Error("Thread not found...");
+    }
+
+    const commentThread = new Thread({
+      text: commentText,
+      author: userId,
+      parentId: threadId,
+    });
+    await commentThread.save();
+
+    referredThread.children.push(commentThread._id);
+    await referredThread.save();
+
+    revalidatePath(path);
+  } catch (err: any) {
+    throw new Error(`Error adding comment to thread: ${err.message}`);
+  }
 }

@@ -1,4 +1,4 @@
-import PostThread from "@/components/thread/Thread";
+import PostThread from "@/components/thread/PostThread";
 import { fetchUser } from "@/lib/actions/user.actions";
 import { currentUser } from "@clerk/nextjs"
 import { redirect } from "next/navigation"
