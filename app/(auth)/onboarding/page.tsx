@@ -1,15 +1,18 @@
 import AccountProfile from '@/components/forms/AccountProfile';
+import { fetchUser } from '@/lib/actions/user.actions';
 import { currentUser } from '@clerk/nextjs';
 
 export default async function page() {
   const currUser = await currentUser();
 
-  const userInfo = {
+  let userInfo;
 
-  };
+  if (currUser) {
+    userInfo = await fetchUser(currUser.id);
+  }
 
   const currUserData = {
-    id: currUser?.id,
+    id: currUser?.id as string,
     objectId: userInfo?._id,
     username: userInfo?.username || currUser?.username,
     name: userInfo?.name || currUser?.firstName || "",
